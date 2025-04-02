@@ -1,6 +1,7 @@
+import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import { formatTimestamp } from '../utils/dataProcessing';
-import { getRandomPostImage } from '../utils/imageUtils';
+import { getRandomAvatar, getRandomPostImage } from '../utils/imageUtils';
 
 const PostCard = ({ post, userData, commentCount, comments = [] }) => {
 const [showComments, setShowComments] = useState(false);
@@ -13,6 +14,9 @@ return (
         src={getRandomAvatar(post.userId)}
         alt={userData.name}
         className="w-10 h-10 rounded-full mr-3"
+        onError={(e) => {
+            e.target.src = 'https://i.pravatar.cc/150?img=0'; // Fallback avatar
+        }}
         />
         <div>
         <h3 className="font-semibold">{userData.name}</h3>
@@ -25,6 +29,9 @@ return (
         src={getRandomPostImage(post.id)}
         alt="Post content"
         className="w-full h-64 object-cover"
+        onError={(e) => {
+          e.target.src = 'https://picsum.photos/500/300?blur'; // Fallback image
+        }}
     />
     
       {/* Post Content */}
@@ -47,7 +54,7 @@ return (
         </button>
         </div>
         
-        {post.commentCount && (
+        {post.commentCount > 10 && (
         <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
             Trending 🔥
         </div>
@@ -66,6 +73,9 @@ return (
                     src={getRandomAvatar(comment.userId)}
                     alt="Commenter"
                     className="w-6 h-6 rounded-full mr-2"
+                    onError={(e) => {
+                    e.target.src = 'https://i.pravatar.cc/150?img=0';
+                    }}
                 />
                 <span className="font-semibold text-sm">{comment.name}</span>
                 </div>
@@ -79,6 +89,37 @@ return (
     )}
     </div>
 );
+};
+
+PostCard.propTypes = {
+post: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    userId: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    body: PropTypes.string.isRequired,
+    timestamp: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number
+    ]).isRequired,
+    commentCount: PropTypes.number
+}).isRequired,
+userData: PropTypes.shape({
+    name: PropTypes.string.isRequired
+}).isRequired,
+commentCount: PropTypes.number,
+comments: PropTypes.arrayOf(
+    PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    userId: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired,
+    body: PropTypes.string.isRequired
+    })
+)
+};
+
+PostCard.defaultProps = {
+commentCount: 0,
+comments: []
 };
 
 export default PostCard;

@@ -1,9 +1,6 @@
-
 import axios from 'axios';
 
-
 const BASE_URL = 'http://20.244.56.144/evaluation-service';
-
 
 const registrationData = {
 email: "ravisingh18879@gmail.com",
@@ -14,7 +11,6 @@ rollNo: "22051716",
 collegeName: "KIIT University",
 accessCode: "nwpwrZ"
 };
-
 
 export const register = async () => {
 try {
@@ -27,29 +23,25 @@ try {
 }
 };
 
-
 const getAuthHeader = () => {
 const token = localStorage.getItem('authToken');
 return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-
-class API {
+class APIService {
 constructor() {
     this.cache = {
     users: { data: null, timestamp: null },
     posts: { data: null, timestamp: null },
     comments: { data: null, timestamp: null }
     };
-    this.cacheLifetime = 60000;
+    this.cacheLifetime = 60000; // 1 minute cache
 }
-
 
 isCacheValid(key) {
-    if (!this.cache[key].data || !this.cache[key].timestamp) return false;
+    if (!this.cache[key]?.data || !this.cache[key]?.timestamp) return false;
     return (Date.now() - this.cache[key].timestamp) < this.cacheLifetime;
 }
-
 
 async getUsers() {
     if (this.isCacheValid('users')) {
@@ -71,7 +63,6 @@ async getUsers() {
     }
 }
 
-
 async getPosts() {
     if (this.isCacheValid('posts')) {
     return this.cache.posts.data;
@@ -91,7 +82,6 @@ async getPosts() {
     throw error;
     }
 }
-
 
 async getComments() {
     if (this.isCacheValid('comments')) {
@@ -113,29 +103,32 @@ async getComments() {
     }
 }
 
-
 async refreshAllData() {
     try {
     const [users, posts, comments] = await Promise.all([
-        axios.get(`${BASE_URL}/users`, { headers: getAuthHeader() }),
-        axios.get(`${BASE_URL}/posts`, { headers: getAuthHeader() }),
-        axios.get(`${BASE_URL}/comments`, { headers: getAuthHeader() })
+        this.getUsers(),
+        this.getPosts(),
+        this.getComments()
     ]);
 
-    this.cache.users = { data: users.data, timestamp: Date.now() };
-    this.cache.posts = { data: posts.data, timestamp: Date.now() };
-    this.cache.comments = { data: comments.data, timestamp: Date.now() };
-
-    return {
-        users: users.data,
-        posts: posts.data,
-        comments: comments.data
-    };
+    return { users, posts, comments };
     } catch (error) {
     console.error('Failed to refresh data:', error);
     throw error;
     }
 }
+
+clearCache() {
+    this.cache = {
+    users: { data: null, timestamp: null },
+    posts: { data: null, timestamp: null },
+    comments: { data: null, timestamp: null }
+    };
+}
 }
 
-export default new API();
+// Create named instance
+const apiService = new APIService();
+
+// Export the instance as default
+export default apiService;

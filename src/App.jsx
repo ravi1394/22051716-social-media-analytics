@@ -26,3 +26,5 @@ function App() {
     </DataProvider>
   );
 }
+
+export default App;  // Add this line
